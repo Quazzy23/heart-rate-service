@@ -5,3 +5,6 @@ __pycache__/
 
 # Local configurations (contains personal device MAC address)
 config.json
+
+# Build / ZIP archives
+*.zip

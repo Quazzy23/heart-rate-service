@@ -16,25 +16,31 @@
 
 ## 🚀 Installation & Setup Guide
 
-### 1. Bluetooth Pairing in Windows
+### 1. Get the Project
+You can get the project using one of the following methods:
+*   **Method A (Recommended for users):** Go to the [Releases](https://github.com/Quazzy23/heart-rate-service/releases) section, download the latest `.zip` archive, and extract it to a folder.
+*   **Method B (For developers / Git users):** Clone the repository via terminal:
+    `git clone https://github.com/Quazzy23/heart-rate-service.git`
+
+### 2. Bluetooth Pairing in Windows
 Turn on your heart rate monitor, open **Windows Bluetooth Settings**, and pair your device with your PC.
 
-### 2. Configure the Device
+### 3. Configure the Device
 Open your project terminal and run:
 `python main.py`
 Select your heart rate monitor from the detected list by entering its index number. A `config.json` file will be generated automatically, storing the device address.
 
-### 3. Install the Background Service
+### 4. Install the Background Service
 Run **`install_service.bat`** to install dependencies and register the silent background task.
 *   Verify execution via `taskschd.msc` (ensure `HeartRateService` state is **Running**).
 *   *To pause the service, select "End" or "Disable".*
 
-### 4. Previewing & Testing Widgets
+### 5. Previewing & Testing Widgets
 The project includes ready-to-use HTML presets inside the `widgets/` folder, but you can also design your own custom overlays.
 *   **Browser Preview:** Open any `.html` file inside the `widgets/` folder to inspect and test the visual style locally in your web browser.
 *   **Adding to OBS:** Add a **Browser** source in OBS, check **Local file**, and point it to your preferred widget file.
 
-### 5. Managing Devices & Uninstallation
+### 6. Managing Devices & Uninstallation
 *   **Switching Devices:** Run `Change-Device.bat` to safely terminate the background task, select a new monitor, update configuration, and resume operation.
 *   **Full Removal:** Run **`uninstall_service.bat`** to completely clean up and remove the background task from Windows.
 
