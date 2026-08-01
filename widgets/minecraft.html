@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Minecraft Heart Rate Overlay</title>
+    <style>
+        /* 1. Полностью прозрачный фон, центрирование по экрану */
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent !important;
+            background-color: rgba(0, 0, 0, 0) !important;
+            /* Принудительное отключение сглаживания шрифтов для пиксельного эффекта */
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: none;
+            font-family: 'Courier New', Courier, monospace; /* Грубый моноширинный шрифт под пиксели */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* 2. Квадратная брутальная панель инвентая в стиле Майнкрафт */
+        .mc-card {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            
+            /* Цвет и текстура интерфейса Майнкрафт (темно-серый камень / интерфейс сундука) */
+            background: #2b2b2b;
+            
+            width: 320px;
+            height: 130px;
+            padding-left: 28px;
+            
+            /* Строго квадратные углы без скруглений */
+            border-radius: 0px;
+            
+            /* Классическая майнкрафт-обводка из двойных рамок (светлая и темная тень) */
+            border: 4px solid #373737;
+            box-shadow: 
+                inset 4px 4px 0px #525252, /* Светлый внутренний контур сверху-слева */
+                inset -4px -4px 0px #1b1b1b, /* Темный внутренний контур снизу-справа */
+                0 8px 0px rgba(0, 0, 0, 0.6); /* Общая глубокая тень под панелью */
+            
+            transition: border-color 0.3s ease;
+        }
+
+        /* Пиксельное сердечко */
+        .heart-icon {
+            font-size: 64px;
+            margin-right: 20px;
+            display: inline-block;
+            line-height: 1;
+            /* Майнкрафт-стиль анимации: резкий скачок без плавностей */
+            animation: mc-beat 0.6s infinite steps(2, start);
+        }
+
+        .bpm-container {
+            display: flex;
+            align-items: flex-end;
+            line-height: 1;
+        }
+
+        .bpm-value {
+            font-size: 82px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.9;
+            color: #ffffff;
+            /* Пиксельная тень у цифр */
+            text-shadow: 4px 4px 0px #000000;
+        }
+
+        .bpm-unit {
+            font-size: 22px;
+            font-weight: 700;
+            margin-left: 10px;
+            margin-bottom: 8px;
+            text-transform: lowercase;
+            line-height: 1;
+            color: #aaaaaa;
+            text-shadow: 2px 2px 0px #000000;
+        }
+
+        /* Цветовые зоны под статус здоровья */
+        .mc-white { color: #ffffff !important; }
+        .mc-yellow { color: #ffff55 !important; } /* Майнкрафтовский желтый */
+        .mc-red { color: #ff5555 !important; }    /* Майнкрафтовский красный */
+
+        /* Резкий майнкрафт-удар сердечка */
+        @keyframes mc-beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mc-card" id="card">
+        <div class="heart-icon">❤️</div>
+        
+        <div class="bpm-container">
+            <span id="bpm" class="bpm-value mc-white">--</span>
+            <span class="bpm-unit">bpm</span>
+        </div>
+    </div>
+
+    <script>
+        const bpmEl = document.getElementById('bpm');
+        const cardEl = document.getElementById('card');
+
+        function updateWidget(bpm) {
+            bpmEl.textContent = bpm;
+            bpmEl.className = 'bpm-value';
+
+            if (bpm < 80) {
+                bpmEl.classList.add('mc-white');
+                cardEl.style.borderColor = '#373737';
+            } else if (bpm >= 80 && bpm < 120) {
+                bpmEl.classList.add('mc-yellow');
+                cardEl.style.borderColor = '#ffaa00'; // Золотая рамка при разгоне
+            } else if (bpm >= 120) {
+                bpmEl.classList.add('mc-red');
+                cardEl.style.borderColor = '#aa0000'; // Красная рамка опасности
+            }
+        }
+
+        function connect() {
+            const socket = new WebSocket('ws://localhost:8765');
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.bpm) {
+                    updateWidget(data.bpm);
+                }
+            };
+
+            socket.onclose = () => {
+                bpmEl.textContent = '--';
+                bpmEl.className = 'bpm-value mc-white';
+                setTimeout(connect, 2000);
+            };
+
+            socket.onerror = () => {
+                socket.close();
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>

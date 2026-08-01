@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Custom Island Overlay</title>
+    <style>
+        /* 1. Абсолютно прозрачный фон */
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent !important;
+            background-color: rgba(0, 0, 0, 0) !important;
+            font-family: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* 2. Капсула длинной 310px */
+        .island-card {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            background: rgba(18, 18, 26, 0.92);
+            
+            /* Твой идеальный размер */
+            width: 310px;
+            height: 135px;
+            padding-left: 50px;
+            
+            border-radius: 70px;
+            border: none !important;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.85), 0 0 60px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .heart-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            margin-top: 8px;
+            animation: heartbeat 1s infinite ease-in-out;
+        }
+
+        .heart-svg {
+            width: 72px;
+            height: 72px;
+            fill: #ff3b30;
+        }
+
+        .bpm-value {
+            font-size: 96px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 0.9;
+            color: #ffffff;
+            transition: color 0.4s ease;
+        }
+
+        /* Цветовые зоны текста */
+        .color-white { color: #ffffff !important; }
+        .color-yellow { color: #ffcc00 !important; }
+        .color-red { color: #ff3b30 !important; }
+
+        /* Текст в режиме ПАНИКИ */
+        .color-panic {
+            color: #ffcccc !important;
+        }
+
+        /* АНИМАЦИЯ 1: Удар сердца (размер) */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.22); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.12); }
+            60% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        /* АНИМАЦИЯ 2: Мигание цвета (Серый / Белый) */
+        .heart-flash {
+            animation: panic-color-flash 0.14s infinite !important;
+        }
+
+        @keyframes panic-color-flash {
+            0%, 49.9% {
+                fill: #666666; /* Серый */
+            }
+            50%, 100% {
+                fill: #ffffff; /* Белый */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="island-card" id="card">
+        <div class="heart-wrapper" id="heart-wrapper">
+            <svg class="heart-svg" id="heart-svg" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+        </div>
+        <span id="bpm" class="bpm-value color-white">--</span>
+    </div>
+
+    <script>
+        const bpmEl = document.getElementById('bpm');
+        const heartWrapper = document.getElementById('heart-wrapper');
+        const heartSvg = document.getElementById('heart-svg');
+
+        function updateWidget(bpm) {
+            bpmEl.textContent = bpm;
+
+            if (bpm > 0) {
+                const beatDuration = 60 / bpm;
+                heartWrapper.style.animationDuration = `${beatDuration}s`;
+            }
+
+            bpmEl.className = 'bpm-value';
+            heartSvg.classList.remove('heart-flash');
+
+            if (bpm < 80) {
+                bpmEl.classList.add('color-white');
+            } else if (bpm >= 80 && bpm < 120) {
+                bpmEl.classList.add('color-yellow');
+            } else if (bpm >= 120 && bpm < 180) {
+                bpmEl.classList.add('color-red');
+            } else if (bpm >= 180) {
+                bpmEl.classList.add('color-panic');
+                heartSvg.classList.add('heart-flash');
+            }
+        }
+
+        function connect() {
+            const socket = new WebSocket('ws://localhost:8765');
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.bpm) {
+                    updateWidget(data.bpm);
+                }
+            };
+
+            socket.onclose = () => {
+                bpmEl.textContent = '--';
+                bpmEl.className = 'bpm-value color-white';
+                heartSvg.classList.remove('heart-flash');
+                setTimeout(connect, 2000);
+            };
+
+            socket.onerror = () => {
+                socket.close();
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>

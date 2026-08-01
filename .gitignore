@@ -1,0 +1,7 @@
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local configurations (contains personal device MAC address)
+config.json

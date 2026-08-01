@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Minimal Heart Rate Overlay</title>
+    <style>
+        /* 1. Полностью прозрачный фон, центрирование по экрану */
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent !important;
+            background-color: rgba(0, 0, 0, 0) !important;
+            font-family: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* 2. Контейнер без островков */
+        .minimal-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
+        }
+
+        /* 3. Эмодзи сердца с быстрым и резким ритмом (быстрее и живее) */
+        .heart-icon {
+            font-size: 80px;
+            margin-right: 10px;
+            display: inline-block;
+            line-height: 1;
+            /* Ускоренная анимация удара (0.75s вместо 1.2s) */
+            animation: heartbeat 0.75s infinite ease-in-out;
+        }
+
+        /* Контейнер цифр и мелкой надписи bpm */
+        .bpm-container {
+            display: flex;
+            align-items: flex-end;
+            line-height: 1;
+        }
+
+        .bpm-value {
+            font-size: 100px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 0.9;
+            color: #ffffff;
+        }
+
+        .bpm-unit {
+            font-size: 28px;
+            font-weight: 700;
+            
+            /* ===== РАССТОЯНИЕ ДЛЯ BPM ===== */
+            margin-left: 22px;   /* Еще дальше вправо от цифр */
+            margin-bottom: 0px; /* Еще ниже (почти по самому низу цифр) */
+            
+            text-transform: lowercase;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Быстрая детализированная анимация удара сердца */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            12% { transform: scale(1.28); } /* Более резкий и высокий удар */
+            25% { transform: scale(1); }
+            37% { transform: scale(1.15); } /* Второй толчок */
+            50% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="minimal-card">
+        <!-- Возвращен эмодзи сердца -->
+        <div class="heart-icon">❤️</div>
+        
+        <div class="bpm-container">
+            <span id="bpm" class="bpm-value">--</span>
+            <span class="bpm-unit">bpm</span>
+        </div>
+    </div>
+
+    <script>
+        const bpmEl = document.getElementById('bpm');
+
+        function connect() {
+            const socket = new WebSocket('ws://localhost:8765');
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.bpm) {
+                    bpmEl.textContent = data.bpm;
+                }
+            };
+
+            socket.onclose = () => {
+                bpmEl.textContent = '--';
+                setTimeout(connect, 2000);
+            };
+
+            socket.onerror = () => {
+                socket.close();
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>
