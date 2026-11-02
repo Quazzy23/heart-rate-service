@@ -100,6 +100,7 @@ async def ble_reconnect_loop():
 
 
 async def main():
+    # Если есть флаг --reset или нет конфига — запускаем интерактивный выбор
     if "--reset" in sys.argv or not os.path.exists(CONFIG_FILE):
         if "--reset" in sys.argv and os.path.exists(CONFIG_FILE):
             os.remove(CONFIG_FILE)
@@ -115,7 +116,7 @@ async def main():
             await ble_reconnect_loop()
         return
 
-    # ОБЫЧНЫЙ ЗАПУСК В КОНСОЛИ (Тестовый режим с выводом 5 секунд пульса)
+    # ОБЫЧНЫЙ ЗАПУСК В КОНСОЛИ (Тестовый режим с выводом связи)
     if config and "device_address" in config:
         device_address = config["device_address"]
         print(f"Testing connection to {device_address}...")
